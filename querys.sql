@@ -9,16 +9,14 @@ FROM zonas_censales_gs AS gs;
 SELECT *
 FROM minimarkets_gs AS mini;
 --
-SELECT DISTINCT gs.id, gs.geom
-FROM zonas_censales_gs AS gs, minimarkets_gs AS mini
-WHERE NOT(ST_DWithin(ST_Transform(gs.geom,32719),ST_Transform(mini.geo::geometry,32719),500))
-LIMIT 20;
---
-
 SELECT ST_Distance(ST_MakePoint(23.73,37.99),ST_MakePoint(23.73,37.99))
 FROM zonas_censales_gs AS gs, minimarkets_gs AS mini;
-
-SELECT ST_Distance(gs.geom,mini.geo)
-FROM zonas_censales_gs AS gs, minimarkets_gs AS mini;
-
-SELECT ST_SRID(gs.geom) FROM zonas_censales_gs as gs;
+--
+SELECT ST_SRID(mini.geo), ST_SRID(gs.geom)
+FROM zonas_censales_gs as gs, minimarkets_gs AS mini;
+-- Query 1
+SELECT DISTINCT gs.id, gs.geom -- Columnas no repetidas
+FROM zonas_censales_gs AS gs, minimarkets_gs AS mini
+WHERE NOT(ST_DWithin(ST_Transform(gs.geom,32719),ST_Transform(mini.geo::geometry,32719),500)) -- Transformacion a SRID 32719 y a mas de 500m
+LIMIT 20;
+--
