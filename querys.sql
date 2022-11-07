@@ -12,7 +12,7 @@ CREATE TABLE zc_500m AS(
 	SELECT zona_censal.id, zona_censal.comuna, zona_censal.nom_comuna
 	FROM public.zonas_censales_gs AS zona_censal
 	LEFT JOIN (SELECT DISTINCT zona_censal.id, zona_censal.comuna
-					   FROM zonas_censales_gs AS zona_censal, minimarkets_gs AS mini
+					   FROM public.zonas_censales_gs AS zona_censal, minimarkets_gs AS mini
 					   WHERE ST_Distance(ST_Transform(mini.geom::geometry, 32719),zona_censal.geom) <= 500) AS zonas_menos_501m
 	ON zonas_menos_501m.id = zona_censal.id
 	WHERE zonas_menos_501m.id IS null);
@@ -22,7 +22,7 @@ SELECT * FROM zc_500m;
 SELECT zc_500m.nom_comuna, COUNT(zc_500m.id) AS total_zc_500m, zonas.total_comunas, COUNT(zc_500m.id) * 100 / zonas.total_comunas AS "porcentaje (%)"
 FROM public.zc_500m AS zc_500m
 INNER JOIN (SELECT zona_censal.comuna, COUNT(zona_censal.id) AS total_comunas
-					  FROM zonas_censales_gs AS zona_censal
+					  FROM public.zonas_censales_gs AS zona_censal
 					  GROUP BY zona_censal.comuna) AS zonas
 ON zonas.comuna = zc_500m.comuna
 GROUP BY zc_500m.comuna, zc_500m.nom_comuna, zonas.total_comunas;
