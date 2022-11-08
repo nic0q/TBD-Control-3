@@ -26,7 +26,7 @@ Para ejecutar correctamente todo el script **querys.sql**, además de los archiv
 * [PgAdmin](https://www.pgadmin.org) versión 4.
 * [PostGis](https://postgis.net) versión 3.2 o superior
 
-También, para el desarrollo del Control:
+También, para el desarrollo del Control se utilizó:
 * [Visual Studio Code](https://code.visualstudio.com) versión 1.73
 * [GitKraken](https://www.gitkraken.com) versión 8.10.3
 
