@@ -19,7 +19,7 @@ DROP TABLE IF EXISTS comunas_ptje_mini;
 CREATE TABLE comunas_ptje_mini AS(
 	SELECT zonas.nom_comuna, ROUND((COUNT(zc_500m.id) * 100.0) / zonas.total_zonas, 2) AS "porcentaje (%)" , zonas.area_comuna
 	FROM public.zc_500m AS zc_500m
-	RIGHT JOIN (SELECT zona.comuna, zona.nom_comuna, COUNT(zona.id) AS total_zonas, ST_union(zona.geom) AS area_comuna
+	RIGHT JOIN (SELECT zona.comuna, zona.nom_comuna, COUNT(zona.id) AS total_zonas, ST_Union(zona.geom) AS area_comuna
 							FROM public.zonas_censales_gs AS zona
 							GROUP BY zona.comuna, zona.nom_comuna) AS zonas
 	ON zonas.comuna = zc_500m.comuna
