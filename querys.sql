@@ -6,23 +6,28 @@ SELECT * FROM minimarkets_gs;
 SELECT * FROM zonas_censales_gs;
 
 -- Pregunta 1
--- Se hace LEFT JOIN con la tabla de zonas censales para obtener las zonas censales que no tienen minimarket a menos de 501 metros, es decir a más de 500 metros
+
+-- Se añade el atributo del punto (geometry)
+ALTER TABLE minimarkets_gs ADD COLUMN geom GEOMETRY;
+UPDATE minimarkets_gs SET geom = ST_SetSRID(ST_MakePoint(longitud,latitud),4326);
+
+-- Se hace LEFT JOIN con la tabla de zonas censales con un minimarket a menos de 500 metros, obteniendo así la cantidad de minimarkets por zona censal que tienen un minimarket a mas de 500 metros
 DROP TABLE IF EXISTS zc_500m;
 CREATE TABLE zc_500m AS(
-	SELECT zona_censal.id, zona_censal.comuna, zona_censal.nom_comuna
-	FROM public.zonas_censales_gs AS zona_censal
-	LEFT JOIN (SELECT DISTINCT zona_censal.id, zona_censal.comuna
-					   FROM public.zonas_censales_gs AS zona_censal, minimarkets_gs AS mini
-					   WHERE ST_Distance(ST_Transform(mini.geom::geometry, 32719),zona_censal.geom) <= 500) AS zonas_menos_501m
-	ON zonas_menos_501m.id = zona_censal.id
-	WHERE zonas_menos_501m.id IS null);
-SELECT * FROM zc_500m;
+	SELECT zona.id, zona.comuna, zona.nom_comuna, zona.geom, zona.cod_distri, zona.cod_zona, zona.geocodigo, zona.shape_leng, zona.shape_area
+	FROM public.zonas_censales_gs AS zona
+	LEFT JOIN minimarkets_gs mini ON ST_DWithin(ST_Transform(mini.geom, 32719), zona.geom, 500)
+	WHERE mini.nombre IS NULL);
 
 -- Pregunta 2
-SELECT zc_500m.nom_comuna, COUNT(zc_500m.id) AS total_zc_500m, zonas.total_comunas, COUNT(zc_500m.id) * 100 / zonas.total_comunas AS "porcentaje (%)"
-FROM public.zc_500m AS zc_500m
-INNER JOIN (SELECT zona_censal.comuna, COUNT(zona_censal.id) AS total_comunas
-					  FROM public.zonas_censales_gs AS zona_censal
-					  GROUP BY zona_censal.comuna) AS zonas
-ON zonas.comuna = zc_500m.comuna
-GROUP BY zc_500m.comuna, zc_500m.nom_comuna, zonas.total_comunas;
+DROP TABLE IF EXISTS comunas_ptje_mini;
+CREATE TABLE comunas_ptje_mini AS(
+	SELECT zonas.nom_comuna, ROUND((COUNT(zc_500m.id) * 100.0) / zonas.total_zonas, 2) AS "porcentaje (%)" , zonas.area_comuna
+	FROM public.zc_500m AS zc_500m
+	RIGHT JOIN (SELECT zona.comuna, zona.nom_comuna, COUNT(zona.id) AS total_zonas, ST_union(zona.geom) AS area_comuna
+							FROM public.zonas_censales_gs AS zona
+							GROUP BY zona.comuna, zona.nom_comuna) AS zonas
+	ON zonas.comuna = zc_500m.comuna
+	GROUP BY zonas.nom_comuna, zonas.area_comuna, zonas.total_zonas
+	ORDER BY "porcentaje (%)" DESC);
+SELECT * FROM comunas_ptje_mini;
